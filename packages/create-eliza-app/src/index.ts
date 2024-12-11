@@ -2,6 +2,7 @@
 
 import { downloadTemplate } from "giget";
 import { runMain } from "citty";
+import inquirer from "inquirer";
 
 const DEFAULT_TEMPLATE = "eliza";
 const DEFAULT_REGISTRY =
