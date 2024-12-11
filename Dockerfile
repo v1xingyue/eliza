@@ -25,8 +25,13 @@ COPY characters ./characters
 
 # Install dependencies and build the project
 RUN pnpm install \
+<<<<<<< HEAD
     && pnpm build \
 && pnpm prune --prod
+=======
+    && pnpm build-docker \
+    && pnpm prune --prod
+>>>>>>> v1xingyue-patch-1
 
 # Create a new stage for the final image
 FROM node:23.3.0-slim
