@@ -371,22 +371,35 @@ async function startAgent(
 ): Promise<AgentRuntime> {
     let db: IDatabaseAdapter & IDatabaseCacheAdapter;
     try {
+        elizaLogger.info("Starting agent initialization...");
         character.id ??= stringToUuid(character.name);
         character.username ??= character.name;
+        elizaLogger.info(
+            `Initializing agent for character: ${character.name} (${character.id})`
+        );
 
         const token = getTokenForProvider(character.modelProvider, character);
+        elizaLogger.info(`Using model provider: ${character.modelProvider}`);
+
         const dataDir = path.join(__dirname, "../data");
+        elizaLogger.info(`Data directory: ${dataDir}`);
 
         if (!fs.existsSync(dataDir)) {
+            elizaLogger.info("Creating data directory...");
             fs.mkdirSync(dataDir, { recursive: true });
         }
 
+        elizaLogger.info("Initializing database...");
         db = initializeDatabase(dataDir) as IDatabaseAdapter &
             IDatabaseCacheAdapter;
-
         await db.init();
+        elizaLogger.info("Database initialized successfully");
 
+        elizaLogger.info("Setting up cache...");
         const cache = initializeDbCache(character, db);
+        elizaLogger.info("Cache setup complete");
+
+        elizaLogger.info("Creating agent runtime...");
         const runtime: AgentRuntime = await createAgent(
             character,
             db,
@@ -394,20 +407,17 @@ async function startAgent(
             token
         );
 
-        // start services/plugins/process knowledge
+        elizaLogger.info("Initializing runtime...");
         await runtime.initialize();
 
-        // start assigned clients
+        elizaLogger.info("Starting auto client...");
         runtime.clients = {
             auto: await AutoClientInterface.start(runtime),
         };
 
-        // add to container
-        // directClient.registerAgent(runtime);
-
-        // report to console
-        elizaLogger.debug(`Started ${character.name} as ${runtime.agentId}`);
-
+        elizaLogger.info(
+            `Agent startup complete for ${character.name} (${runtime.agentId})`
+        );
         return runtime;
     } catch (error) {
         elizaLogger.error(
@@ -423,29 +433,25 @@ async function startAgent(
 }
 
 const startAgents = async () => {
-    // const directClient = new DirectClient();
-    // const serverPort = parseInt(settings.SERVER_PORT || "3000");
-
-    // 使用默认角色或指定的角色
+    elizaLogger.info("Starting agents process...");
     const args = parseArguments();
     let charactersArg = args.characters || args.character;
     let characters = [defaultCharacter];
 
     if (charactersArg) {
+        elizaLogger.info(`Loading characters from: ${charactersArg}`);
         characters = await loadCharacters(charactersArg);
+    } else {
+        elizaLogger.info("Using default character");
     }
 
     try {
-        // 只启动第一个角色
+        elizaLogger.info(`Starting agent for character: ${characters[0].name}`);
         await startAgent(characters[0], null);
+        elizaLogger.info("Agent started successfully");
     } catch (error) {
         elizaLogger.error("Error starting agent:", error);
     }
-
-    // 移除 web 服务相关代码
-    // directClient.start(serverPort);
-    // elizaLogger.log("Visit the following URL to chat with your agents:");
-    // elizaLogger.log(`http://localhost:5173`);
 };
 
 startAgents().catch((error) => {
