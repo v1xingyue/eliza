@@ -209,6 +209,7 @@ export type Models = {
     [ModelProviderName.HYPERBOLIC]: Model;
     [ModelProviderName.VENICE]: Model;
     [ModelProviderName.AKASH_CHAT_API]: Model;
+    [ModelProviderName.GITHUB]: Model;
 };
 
 /**
@@ -238,6 +239,7 @@ export enum ModelProviderName {
     HYPERBOLIC = "hyperbolic",
     VENICE = "venice",
     AKASH_CHAT_API = "akash_chat_api",
+    GITHUB = "github",
 }
 
 /**
@@ -755,7 +757,6 @@ export type Character = {
         slack?: {
             shouldIgnoreBotMessages?: boolean;
             shouldIgnoreDirectMessages?: boolean;
-
         };
     };
 
@@ -777,7 +778,7 @@ export type Character = {
     /** Optional NFT prompt */
     nft?: {
         prompt: string;
-    }
+    };
 };
 
 /**
