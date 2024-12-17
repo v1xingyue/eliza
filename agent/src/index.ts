@@ -26,6 +26,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
+import readline from "readline";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -432,6 +433,44 @@ async function startAgent(
     }
 }
 
+async function startChat(runtime: AgentRuntime) {
+    elizaLogger.info("Starting chat interface...");
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+
+    console.log("\n=== Chat started with " + runtime.character.name + " ===");
+    console.log("(Type 'exit' to quit)\n");
+
+    const askQuestion = () => {
+        rl.question("You: ", async (input) => {
+            if (input.toLowerCase() === "exit") {
+                rl.close();
+                process.exit(0);
+                return;
+            }
+
+            try {
+                const response = await runtime.chat({
+                    text: input,
+                    userId: "user",
+                    username: "user",
+                });
+
+                console.log(`\n${runtime.character.name}: ${response.text}\n`);
+            } catch (error) {
+                elizaLogger.error("Error getting response:", error);
+            }
+
+            askQuestion();
+        });
+    };
+
+    askQuestion();
+}
+
 const startAgents = async () => {
     elizaLogger.info("Starting agents process...");
     const args = parseArguments();
@@ -447,8 +486,11 @@ const startAgents = async () => {
 
     try {
         elizaLogger.info(`Starting agent for character: ${characters[0].name}`);
-        await startAgent(characters[0], null);
+        const runtime = await startAgent(characters[0], null);
         elizaLogger.info("Agent started successfully");
+
+        // 启动聊天界面
+        await startChat(runtime);
     } catch (error) {
         elizaLogger.error("Error starting agent:", error);
     }
