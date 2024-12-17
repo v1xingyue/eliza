@@ -1,8 +1,11 @@
 import { SqliteDatabaseAdapter } from "@ai16z/adapter-sqlite";
+import { AutoClientInterface } from "@ai16z/client-auto";
+
 import {
     AgentRuntime,
     CacheManager,
     Character,
+    Clients,
     DbCacheAdapter,
     defaultCharacter,
     elizaLogger,
@@ -293,6 +296,16 @@ export async function initializeClients(
     const clientTypes: string[] =
         character.clients?.map((str) => str.toLowerCase()) || [];
     elizaLogger.log("initializeClients", clientTypes, "for", character.name);
+
+    if (clientTypes.length == 0) {
+        clientTypes.push(Clients.DIRECT);
+        elizaLogger.log("No clients specified, using default", Clients.DIRECT);
+    }
+
+    if (clientTypes.includes(Clients.DIRECT)) {
+        const autoClient = await AutoClientInterface.start(runtime);
+        if (autoClient) clients.auto = autoClient;
+    }
 
     if (character.plugins?.length > 0) {
         for (const plugin of character.plugins) {
