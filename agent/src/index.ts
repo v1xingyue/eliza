@@ -398,10 +398,12 @@ async function startAgent(
         await runtime.initialize();
 
         // start assigned clients
-        runtime.clients = await initializeClients(character, runtime);
+        runtime.clients = {
+            auto: await AutoClientInterface.start(runtime),
+        };
 
         // add to container
-        directClient.registerAgent(runtime);
+        // directClient.registerAgent(runtime);
 
         // report to console
         elizaLogger.debug(`Started ${character.name} as ${runtime.agentId}`);
@@ -421,12 +423,12 @@ async function startAgent(
 }
 
 const startAgents = async () => {
-    const directClient = new DirectClient();
-    const serverPort = parseInt(settings.SERVER_PORT || "3000");
+    // const directClient = new DirectClient();
+    // const serverPort = parseInt(settings.SERVER_PORT || "3000");
+
+    // 使用默认角色或指定的角色
     const args = parseArguments();
-
     let charactersArg = args.characters || args.character;
-
     let characters = [defaultCharacter];
 
     if (charactersArg) {
@@ -434,22 +436,16 @@ const startAgents = async () => {
     }
 
     try {
-        for (const character of characters) {
-            await startAgent(character, directClient);
-        }
+        // 只启动第一个角色
+        await startAgent(characters[0], null);
     } catch (error) {
-        elizaLogger.error("Error starting agents:", error);
+        elizaLogger.error("Error starting agent:", error);
     }
 
-    // upload some agent functionality into directClient
-    directClient.startAgent = async (character) => {
-        // wrap it so we don't have to inject directClient later
-        return startAgent(character, directClient);
-    };
-    directClient.start(serverPort);
-
-    elizaLogger.log("Visit the following URL to chat with your agents:");
-    elizaLogger.log(`http://localhost:5173`);
+    // 移除 web 服务相关代码
+    // directClient.start(serverPort);
+    // elizaLogger.log("Visit the following URL to chat with your agents:");
+    // elizaLogger.log(`http://localhost:5173`);
 };
 
 startAgents().catch((error) => {
